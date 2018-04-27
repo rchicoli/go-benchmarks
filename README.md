@@ -1,9 +1,11 @@
 # Go Benchmarks
 
+This is a collection of multiple benchmarks. Some of them are just copied from other projects or from the internet.
+
 How to run:
 
 ```bash
-go test -v -bench=. -benchtime 1s -benchmem
+go test -v -bench=. -benchtime 1s -benchmem ./...
 ```
 
 Benchmark Output:
@@ -35,3 +37,9 @@ BenchmarkMapHints-8                     200000000                6.96 ns/op     
 BenchmarkMapsHints_Dont-8               100000000               12.3 ns/op             0 B/op          0 allocs/op
 
 ```
+
+## Sources
+
+  - https://github.com/Tkanos/strings-vs-bytes/blob/master/bench_test.go
+  - https://www.soroushjp.com/2015/01/27/beautifully-simple-benchmarking-with-go/
+  - https://stackoverflow.com/questions/1760757/how-to-efficiently-concatenate-strings-in-go
