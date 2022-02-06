@@ -8,6 +8,8 @@ var tests = []struct {
 	want int
 }{
 	{"ThisAndThat", "this and that", 3},
+	{"ThisAndThatWithTab", "	this and that", 3},
+	{"ThisAndThatWhiteSpaces", " this and that ", 3},
 }
 
 func TestWordCount(t *testing.T) {
