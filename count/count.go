@@ -29,7 +29,7 @@ func WordCount(str string) int {
 
 func WordCountUnicode(str string) int {
 	counter := 0
-	for _, v := range str {
+	for _, v := range strings.TrimSpace(str) {
 		if unicode.IsSpace(v) {
 			counter++
 		}
