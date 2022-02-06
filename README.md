@@ -1,21 +1,10 @@
-# Go Benchmarks
+# Go Diagnostics
 
-This is a collection of multiple benchmarks. Some of them are just copied from other projects or from the internet.
+This project covers a bit of go benchmarking and profiling.
 
-## Profiling
+## Getting started
 
-Predefined profiles provided by the [runtime/pprof](https://go.dev/pkg/runtime/pprof) package:
-
-  -  **cpu**: CPU profile determines where a program spends its time while actively consuming CPU cycles (as opposed to while sleeping or waiting for I/O).
-  -  **heap**: Heap profile reports memory allocation samples; used to monitor current and historical memory usage, and to check for memory leaks.
-  -  **threadcreate**: Thread creation profile reports the sections of the program that lead the creation of new OS threads.
-  -  **goroutine**: Goroutine profile reports the stack traces of all current goroutines.
-  -  **block**: Block profile shows where goroutines block waiting on synchronization primitives (including timer channels). Block profile is not enabled by default; use runtime.SetBlockProfileRate to enable it.
-  -  **mutex**: Mutex profile reports the lock contentions. When you think your CPU is not fully utilized due to a mutex contention, use this profile. Mutex profile is not enabled by default, see runtime.SetMutexProfileFraction to enable it.
-
-## Go help
-
-Before starting to write Go tests, make sure to read the [go.dev](https://pkg.go.dev/testing) documentation and the go help pages:
+Before starting to write Go test benchmarks, make sure to read the [go.dev](https://pkg.go.dev/testing) documentation and the go help pages:
 
 ```bash
 go help test
@@ -26,7 +15,7 @@ go tool pprof --help
 
 ## Go test flags
 
-There are multiple flags provided by the go test command. This project documentation will shortly cover few different flags:
+There are multiple flags provided by the go test command, which this documentation is going to use:
 
 ```bash
   -test.bench regexp
@@ -85,7 +74,7 @@ There are multiple flags provided by the go test command. This project documenta
 
 The testing package provides support for running unittests and also benchmarking. To write a new test case, create a file whose name ends with _test.go.
 
-With **go test** is possible to run all tests and benchmarks a single command. To profile the application, a specific package must be provided. Following command is going to display all tests and benchmarks to the standard output:
+With **go test** is possible to run all tests and benchmarks with a single command. To profile the application, a specific package must be provided. The following command displays all tests and benchmarks available to the standard output:
 
 ```bash
 go test -bench=. -benchtime 1s -benchmem ./...
@@ -100,7 +89,7 @@ go test -bench=. -benchtime 10s -benchmem -run=^$ ./...
 **Benchmarking of a concatenation of strings:**
 
 ```bash
-# Concat Strings
+# name                         iterations     time spent per operations  objects allocated     allocations
 BenchmarkConcat-24               1000000             67038 ns/op          503995 B/op          1 allocs/op
 BenchmarkFmt-24                   940023            131664 ns/op          946526 B/op          4 allocs/op
 BenchmarkBuffer-24              176537760                6.773 ns/op           5 B/op          0 allocs/op
@@ -108,39 +97,126 @@ BenchmarkCopy-24                345607824                3.212 ns/op           2
 BenchmarkStringBuilder-24       458440635                2.534 ns/op           6 B/op          0 allocs/op
 ```
 
-Go also provides a benchstat tool, which is very useful to compare different benchmarks to ensure the perfomance hasn't been degraded. Install the benchstat tool with go install command:
+Go also provides a **benchstat** tool, which is very useful to compare different benchmarks to ensure the perfomance of the code hasn't been degraded. To install it use the _go install_ command:
 
 ```bash
 go install golang.org/x/perf/cmd/benchstat@latest
 ```
 
-Let's run the same benchmarking twice and compare its results, then save the output to a file and use the **count** flag to rerun the benchmarks couple of times:
+Let's run the same benchmarking twice and compare its results, then save the output to a file and use the **count** flag to rerun the benchmarks couple of times. In the first run, make sure to increase the timeout, otherwise it might fail with timeout error message:
 
 ```bash
-go test -bench=. -benchtime 5s -count 5 -benchmem ./concat > bench1.log
+go test -bench=. -benchtime 5s -count 5 -timeout 3600s -benchmem ./concat > bench1.log
 ```
 
-In this case, the function inside the BenchmarkConcat is going to be replaced with the BenchmarkBuffer to show some nice statistics. Once again after the changes:
+```bash
+$ cat bench1.log
+BenchmarkConcat-24             	 1000000	         66094 ns/op	  503995 B/op	       1 allocs/op
+BenchmarkConcat-24             	 1000000	         66373 ns/op	  503995 B/op	       1 allocs/op
+BenchmarkConcat-24             	 1000000	         65767 ns/op	  503995 B/op	       1 allocs/op
+BenchmarkConcat-24             	 1000000	         66421 ns/op	  503995 B/op	       1 allocs/op
+BenchmarkConcat-24             	 1000000	         66732 ns/op	  503995 B/op	       1 allocs/op
+... # removed
+BenchmarkCopy-24             	1000000000	         3.049 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.125 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.158 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.108 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.019 ns/op	       2 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.597 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.459 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.603 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.488 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.718 ns/op	       7 B/op	       0 allocs/op
+```
+
+In this case, the function inside the BenchmarkConcat is going to be replaced with the BenchmarkBuffer to show some nice statistics after a small code refactoring. Once again after the changes:
 
 ```bash
 $ go test -bench=. -benchtime 5s -count 5 -benchmem ./concat | tee bench2.log
-BenchmarkConcat-24              991294297                5.066 ns/op           4 B/op          0 allocs/op
-BenchmarkConcat-24              1000000000               5.090 ns/op           4 B/op          0 allocs/op
-BenchmarkConcat-24              1000000000               5.164 ns/op           4 B/op          0 allocs/op
-BenchmarkConcat-24              1000000000               5.018 ns/op           4 B/op          0 allocs/op
-BenchmarkConcat-24              1000000000               5.027 ns/op           4 B/op          0 allocs/op
+BenchmarkConcat-24           	991294297	         5.066 ns/op	       4 B/op	       0 allocs/op
+BenchmarkConcat-24           	1000000000	         5.090 ns/op	       4 B/op	       0 allocs/op
+BenchmarkConcat-24           	1000000000	         5.164 ns/op	       4 B/op	       0 allocs/op
+BenchmarkConcat-24           	1000000000	         5.018 ns/op	       4 B/op	       0 allocs/op
+BenchmarkConcat-24           	1000000000	         5.027 ns/op	       4 B/op	       0 allocs/op
 ... # removed
-PASS
-ok      github.com/rchicoli/go-benchmarks/concat        122.664s
+BenchmarkCopy-24             	1000000000	         3.266 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.317 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.323 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.284 ns/op	       2 B/op	       0 allocs/op
+BenchmarkCopy-24             	1000000000	         3.313 ns/op	       2 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.681 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.330 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.464 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.667 ns/op	       7 B/op	       0 allocs/op
+BenchmarkStringBuilder-24    	1000000000	         2.455 ns/op	       7 B/op	       0 allocs/op
 ```
 
-Now just compare the results with benchstat tool:
+Now just compare the results with benchstat tool and see the statistics showing the percent change in mean. Small p-values indicate that the two distributions are significantly different. If the test indicates that there was no significant change between the two benchmarks (defined as p > 0.05)
 
 ```bash
-benchstat bench1.log bench2.log
+$ benchstat bench1.log bench2.log
+name              old time/op    new time/op    delta
+Concat-24           66.3µs ± 1%     0.0µs ± 2%   -99.99%  (p=0.008 n=5+5)
+Copy-24             3.09ns ± 2%    3.30ns ± 1%    +6.75%  (p=0.008 n=5+5)
+StringBuilder-24    2.57ns ± 6%    2.52ns ± 8%      ~     (p=0.548 n=5+5)
+
+name              old alloc/op   new alloc/op   delta
+Concat-24            504kB ± 0%       0kB ± 0%  -100.00%  (p=0.008 n=5+5)
+Copy-24              2.00B ± 0%     2.00B ± 0%      ~     (all equal)
+StringBuilder-24     7.00B ± 0%     7.00B ± 0%      ~     (all equal)
+
+name              old allocs/op  new allocs/op  delta
+Concat-24             1.00 ± 0%      0.00       -100.00%  (p=0.008 n=5+5)
+Copy-24               0.00           0.00           ~     (all equal)
+StringBuilder-24      0.00           0.00           ~     (all equal)
 ```
 
+There are few things to point out, lets go line by line:
+
+```shell
+Concat-24           66.3µs ± 1%     0.0µs ± 2%   -99.99%  (p=0.008 n=5+5)
+```
+
+After looking at the Concat benchmark, the refactoring was a jackpot. The code was improved by 100%:
+
+- the first time it did **1.000.000** iterations, which took around **66.3µs** per operations
+- the second benchmark reported **1.000.000.000** iterations with **5ns** per each (benchstat displays **0.0µs**)
+
+```shell
+Copy-24             3.09ns ± 2%    3.30ns ± 1%    +6.75%  (p=0.008 n=5+5)
+```
+
+- The first Copy benchmark had a mean of **3.09ns** with a variation of **2%** across all 5 samples collected
+- Comparing the tests, the delta shows 6.75%, which means that the Copy function took slower to process.
+
+```shell
+StringBuilder-24    2.57ns ± 6%    2.52ns ± 8%      ~     (p=0.548 n=5+5)
+```
+
+- no noticeable improvements
+
+If this is not good enough, create a html page by providing the **-html** flag.
+
+```bash
+benchstat -html bench1.log bench2.log > index.html
+```
+
+Open the index.html file with the browser to see a colourful benchmark report:
+
+![alt text](./images/benchstat-report.png)
+
 It is amazing how easy and useful this can be to optize any part of the code. In the example above, it is reasonable notice the costs of using a string concatenation, lets dive into the package and profile the used functions.
+
+## Profiling
+
+Predefined profiles provided by the [runtime/pprof](https://go.dev/pkg/runtime/pprof) package:
+
+  -  **cpu**: CPU profile determines where a program spends its time while actively consuming CPU cycles (as opposed to while sleeping or waiting for I/O).
+  -  **heap**: Heap profile reports memory allocation samples; used to monitor current and historical memory usage, and to check for memory leaks.
+  -  **threadcreate**: Thread creation profile reports the sections of the program that lead the creation of new OS threads.
+  -  **goroutine**: Goroutine profile reports the stack traces of all current goroutines.
+  -  **block**: Block profile shows where goroutines block waiting on synchronization primitives (including timer channels). Block profile is not enabled by default; use runtime.SetBlockProfileRate to enable it.
+  -  **mutex**: Mutex profile reports the lock contentions. When you think your CPU is not fully utilized due to a mutex contention, use this profile. Mutex profile is not enabled by default, see runtime.SetMutexProfileFraction to enable it.
 
 ## How to profile
 
@@ -263,7 +339,8 @@ go tool pprof -http=":8000" -nodefraction=0 cpu.prof
 ## Sources
 
   - https://github.com/Tkanos/strings-vs-bytes/blob/master/bench_test.go
-  - https://www.soroushjp.com/2015/01/27/beautifully-simple-benchmarking-with-go/
-  - https://stackoverflow.com/questions/1760757/how-to-efficiently-concatenate-strings-in-go
   - https://hackernoon.com/go-the-complete-guide-to-profiling-your-code-h51r3waz
+  - https://pkg.go.dev/golang.org/x/perf/cmd/benchstat#section-readme
   - https://pkg.go.dev/testing
+  - https://stackoverflow.com/questions/1760757/how-to-efficiently-concatenate-strings-in-go
+  - https://www.soroushjp.com/2015/01/27/beautifully-simple-benchmarking-with-go/
