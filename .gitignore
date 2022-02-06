@@ -1,3 +1,5 @@
-*cpu.prof
-*mem.prof
+*\.prof
 *\.test
+*\.out
+*\.log
+go-benchmarks
