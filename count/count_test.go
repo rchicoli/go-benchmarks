@@ -1,6 +1,9 @@
 package count
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 var tests = []struct {
 	name string
@@ -14,19 +17,19 @@ var tests = []struct {
 
 func TestWordCount(t *testing.T) {
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s/WordCountRegexp", tt.name), func(t *testing.T) {
 			if got := WordCountRegexp(tt.str); got != tt.want {
 				t.Errorf("WordCountRegexp() = %v, want %v", got, tt.want)
 			}
 		})
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s/WordCount", tt.name), func(t *testing.T) {
 			if got := WordCount(tt.str); got != tt.want {
 				t.Errorf("WordCount() = %v, want %v", got, tt.want)
 			}
 		})
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%s/WordCountUnicode", tt.name), func(t *testing.T) {
 			if got := WordCountUnicode(tt.str); got != tt.want {
-				t.Errorf("WordCount() = %v, want %v", got, tt.want)
+				t.Errorf("WordCountUnicode() = %v, want %v", got, tt.want)
 			}
 		})
 	}
