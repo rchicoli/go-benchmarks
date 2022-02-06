@@ -3,6 +3,7 @@ package count
 import (
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // Match non-space character sequences
@@ -24,4 +25,14 @@ func WordCount(str string) int {
 		counter++
 	}
 	return counter
+}
+
+func WordCountUnicode(str string) int {
+	counter := 0
+	for _, v := range str {
+		if unicode.IsSpace(v) {
+			counter++
+		}
+	}
+	return counter + 1
 }
