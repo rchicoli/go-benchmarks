@@ -2,9 +2,10 @@ package count
 
 import "regexp"
 
+// Match non-space character sequences
+var re = regexp.MustCompile(`[\S]+`)
+
 func WordCountRegexp(str string) int {
-	// Match non-space character sequences
-	re := regexp.MustCompile(`[\S]+`)
 
 	// Find all matches and return count
 	counter := re.FindAllString(str, -1)
