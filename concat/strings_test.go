@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -15,55 +16,66 @@ import (
 // BenchmarkStringBuilder-8        200000000                7.73 ns/op            5 B/op          0 allocs/op
 
 func BenchmarkConcat(b *testing.B) {
+	// b.Skip()
 	var str string
 	for n := 0; n < b.N; n++ {
 		str += "x"
 	}
-	b.StopTimer()
+	// b.StopTimer()
 
-	// if s := strings.Repeat("x", b.N); str != s {
-	// 	b.Errorf("unexpected result; got=%s, want=%s", str, s)
-	// }
+	if s := strings.Repeat("x", b.N); str != s {
+		b.Errorf("unexpected result; got=%s, want=%s", str, s)
+	}
+}
+
+func BenchmarkFmt(b *testing.B) {
+	var str string
+	for n := 0; n < b.N; n++ {
+		str = fmt.Sprintf("%s%s", str, "x")
+	}
+	if s := strings.Repeat("x", b.N); str != s {
+		b.Errorf("unexpected result; got=%s, want=%s", str, s)
+	}
 }
 
 func BenchmarkBuffer(b *testing.B) {
+
 	var buffer bytes.Buffer
 	for n := 0; n < b.N; n++ {
 		buffer.WriteString("x")
 	}
-	b.StopTimer()
+	// b.StopTimer()
 
-	// if s := strings.Repeat("x", b.N); buffer.String() != s {
-	// 	b.Errorf("unexpected result; got=%s, want=%s", buffer.String(), s)
-	// }
+	if s := strings.Repeat("x", b.N); buffer.String() != s {
+		b.Errorf("unexpected result; got=%s, want=%s", buffer.String(), s)
+	}
 }
 
 func BenchmarkCopy(b *testing.B) {
+
 	bs := make([]byte, b.N)
 	bl := 0
-
-	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
+		// bl += copy(bs[bl:], "x")
 		bl += copy(bs[bl:], "x")
 	}
-	b.StopTimer()
 
-	// if s := strings.Repeat("x", b.N); string(bs) != s {
-	// 	b.Errorf("unexpected result; got=%s, want=%s", string(bs), s)
-	// }
+	if s := strings.Repeat("x", b.N); string(bs) != s {
+		b.Errorf("unexpected result; got=%s, want=%s", string(bs), s)
+	}
 }
 
 // Go 1.10
 func BenchmarkStringBuilder(b *testing.B) {
 	var strBuilder strings.Builder
 
-	b.ResetTimer()
+	// b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		strBuilder.WriteString("x")
 	}
-	b.StopTimer()
+	// b.StopTimer()
 
-	// if s := strings.Repeat("x", b.N); strBuilder.String() != s {
-	// 	b.Errorf("unexpected result; got=%s, want=%s", strBuilder.String(), s)
-	// }
+	if s := strings.Repeat("x", b.N); strBuilder.String() != s {
+		b.Errorf("unexpected result; got=%s, want=%s", strBuilder.String(), s)
+	}
 }
