@@ -35,6 +35,11 @@ func TestReverseUnicode(t *testing.T) {
 				t.Errorf("reverseUnicode() = %v, want %v", got, tt.want)
 			}
 		})
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ReverseUnicode2(tt.str); got != tt.want {
+				t.Errorf("reverseUnicode2() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
 
@@ -69,6 +74,12 @@ func BenchmarkReverse(b *testing.B) {
 func BenchmarkReverseUnicode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ReverseUnicode("foobar")
+	}
+}
+
+func BenchmarkReverseUnicode2(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		ReverseUnicode2("foobar")
 	}
 }
 
